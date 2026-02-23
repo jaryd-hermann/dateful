@@ -42,11 +42,13 @@
    - Click "Environment Variables"
    - Add:
      - **Name:** `VITE_SUPABASE_URL`
-     - **Value:** `https://hwsmagjcxoagzppibzna.supabase.co`
+     - **Value:** `https://[your-project-id].supabase.co` (get from Supabase dashboard)
    - Add:
      - **Name:** `VITE_SUPABASE_ANON_KEY`
-     - **Value:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3c21hZ2pjeG9hZ3pwcGliem5aIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4ODE2ODEsImV4cCI6MjA4NzQ1NzY4MX0.FS0RwlcTrl83MZ_3T4GsDPv6K8FQrF_MabtpQe8DeGw`
+     - **Value:** `[your-anon-key]` (get from Supabase dashboard → Settings → API)
    - Make sure both are set for **Production**, **Preview**, and **Development**
+   
+   **Note:** You can find these values in your Supabase project dashboard under Settings → API.
 
 4. **Deploy:**
    - Click "Deploy"
