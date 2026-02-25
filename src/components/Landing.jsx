@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { track } from '../lib/posthog'
-import { supabaseUrl, supabaseAnonKey } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 
 export default function Landing() {
   const [email, setEmail] = useState('')
@@ -17,21 +17,24 @@ export default function Landing() {
     setError('')
     setStatus('loading')
     try {
-      const res = await fetch(`${supabaseUrl}/functions/v1/waitlist-join`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(supabaseAnonKey && { Authorization: `Bearer ${supabaseAnonKey}` }),
-        },
-        body: JSON.stringify({ email: trimmed }),
+      const { data, error } = await supabase.functions.invoke('waitlist-join', {
+        body: { email: trimmed },
       })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'Something went wrong')
+      if (error) throw new Error(error.message || 'Something went wrong')
+      if (data?.error) throw new Error(data.error)
       track('waitlist_joined', { location: 'landing' })
       setStatus('success')
       setEmail('')
     } catch (err) {
-      setError(err.message || 'Something went wrong')
+      const msg = err.message || 'Something went wrong'
+      const isNetwork = msg === 'Failed to fetch' || msg.includes('NetworkError')
+      const is401 = msg.includes('401') || msg.toLowerCase().includes('unauthorized')
+      const display = isNetwork
+        ? 'Connection failed. Please try again.'
+        : is401
+          ? 'Configuration error. Please try again later.'
+          : msg
+      setError(display)
       setStatus('idle')
     }
   }

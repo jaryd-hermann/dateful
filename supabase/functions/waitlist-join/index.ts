@@ -46,9 +46,16 @@ serve(async (req) => {
           { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        console.error('Waitlist insert error (table missing):', error)
+        return new Response(
+          JSON.stringify({ error: 'Server setup incomplete. Please try again later.' }),
+          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
       console.error('Waitlist insert error:', error)
       return new Response(
-        JSON.stringify({ error: 'Something went wrong' }),
+        JSON.stringify({ error: 'Something went wrong. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
