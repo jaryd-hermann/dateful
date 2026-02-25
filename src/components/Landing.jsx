@@ -1,51 +1,38 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { track } from '../lib/posthog'
+import { supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 
 export default function Landing() {
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState('idle') // 'idle' | 'loading' | 'success' | 'error' | 'duplicate'
-  const [errorMessage, setErrorMessage] = useState('')
-
-  const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return regex.test(email)
-  }
+  const [status, setStatus] = useState('idle')
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    const trimmedEmail = email.trim().toLowerCase()
-    
-    if (!trimmedEmail) {
-      setErrorMessage('Please enter your email')
-      setStatus('error')
+    const trimmed = email.trim()
+    if (!trimmed) {
+      setError('Please enter your email')
       return
     }
-
-    if (!validateEmail(trimmedEmail)) {
-      setErrorMessage('Please enter a valid email')
-      setStatus('error')
-      return
-    }
-
+    setError('')
     setStatus('loading')
-    setErrorMessage('')
-
-    const { error } = await supabase
-      .from('waitlist')
-      .insert({ email: trimmedEmail })
-
-    if (error) {
-      if (error.code === '23505') {
-        // Unique violation — duplicate email
-        setStatus('duplicate')
-      } else {
-        setStatus('error')
-        setErrorMessage('Something went wrong. Please try again.')
-      }
-    } else {
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/waitlist-join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(supabaseAnonKey && { Authorization: `Bearer ${supabaseAnonKey}` }),
+        },
+        body: JSON.stringify({ email: trimmed }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Something went wrong')
+      track('waitlist_joined', { location: 'landing' })
       setStatus('success')
       setEmail('')
+    } catch (err) {
+      setError(err.message || 'Something went wrong')
+      setStatus('idle')
     }
   }
 
@@ -79,46 +66,34 @@ export default function Landing() {
           For couples who love date nights but hate planning them, Dateful is your personal date night assistant that learns what you and your partner love, finds amazing things to do in your city, and plans everything for you — so you just show up.
         </p>
 
-        {/* Email Capture */}
+        {/* Waitlist CTA */}
         <div className="pt-24 mb-28 animate-fade-in-delay-4">
           {status === 'success' ? (
-            <div className="text-center py-4">
-              <p className="text-lg text-[var(--color-accent)]">You're in! We'll be in touch soon.</p>
-            </div>
-          ) : status === 'duplicate' ? (
-            <div className="text-center py-4">
-              <p className="text-lg text-[var(--color-accent)]">Looks like you're already on the list!</p>
-            </div>
+            <p className="text-lg text-[var(--color-accent)] font-medium" style={{ fontFamily: 'var(--font-display)' }}>
+              You&apos;re on the list! We&apos;ll be in touch soon.
+            </p>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex flex-col md:flex-row gap-4">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    setStatus('idle')
-                    setErrorMessage('')
-                  }}
-                  placeholder="Enter your email"
-                  disabled={status === 'loading'}
-                  autoFocus
-                  className="flex-1 px-8 py-3.5 text-lg bg-transparent border border-[var(--color-text-secondary)]/20 rounded-md text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:border-[var(--color-accent)]/50 transition-all disabled:opacity-50"
-                  style={{ paddingLeft: '32px', paddingRight: '32px', paddingTop: '14px', paddingBottom: '14px' }}
-                />
-                <button
-                  type="submit"
-                  disabled={status === 'loading'}
-                  className="px-12 py-3 text-lg bg-[var(--color-accent)] text-[var(--color-bg)] font-semibold rounded-md hover:bg-[var(--color-accent-hover)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
-                  style={{ paddingLeft: '48px', paddingRight: '48px', paddingTop: '12px', paddingBottom: '12px' }}
-                >
-                  {status === 'loading' ? 'Joining...' : 'I want this'}
-                </button>
-              </div>
-              {errorMessage && (
-                <p className="text-sm text-[var(--color-accent)]">{errorMessage}</p>
-              )}
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="waitlist-input flex-1"
+                disabled={status === 'loading'}
+                autoComplete="email"
+              />
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="landing-cta whitespace-nowrap"
+              >
+                {status === 'loading' ? 'Joining...' : 'Join waitlist'}
+              </button>
             </form>
+          )}
+          {error && (
+            <p className="text-sm text-[var(--color-accent)] mt-2">{error}</p>
           )}
         </div>
 
