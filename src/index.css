@@ -53,6 +53,33 @@ body {
   width: 100%;
 }
 
+/* Landing page - explicit padding for mobile */
+.landing-page {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-left: max(1.5rem, env(safe-area-inset-left));
+  padding-right: max(1.5rem, env(safe-area-inset-right));
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .landing-page {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.landing-page main {
+  width: 100%;
+  max-width: 520px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 /* Onboarding - uses design system spacing tokens */
 .onboarding-page {
   width: 100%;

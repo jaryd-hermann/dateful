@@ -40,8 +40,8 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 sm:px-8 md:px-6">
-      <main className="w-full max-w-[520px] py-16 md:py-20">
+    <div className="landing-page">
+      <main className="py-16 md:py-20">
         {/* Header Image */}
         <div className="mb-28 animate-fade-in">
           <img 
@@ -70,7 +70,7 @@ export default function Landing() {
         </p>
 
         {/* Waitlist CTA */}
-        <div className="pt-24 mb-28 animate-fade-in-delay-4">
+        <div className="pt-12 sm:pt-24 mb-28 animate-fade-in-delay-4 mt-10 sm:mt-0">
           {status === 'success' ? (
             <p className="text-lg text-[var(--color-accent)] font-medium" style={{ fontFamily: 'var(--font-display)' }}>
               You&apos;re on the list! We&apos;ll be in touch soon.
