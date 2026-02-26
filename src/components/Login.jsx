@@ -24,17 +24,21 @@ export default function Login() {
     setErrorMessage('')
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const signInPromise = supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password,
       })
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timed out. If your Supabase project was paused (free tier), try again — it may need a minute to wake up. Otherwise check your network.')), 45000)
+      )
+      const { data, error } = await Promise.race([signInPromise, timeoutPromise])
 
       if (error) {
         throw new Error(error.message)
       }
 
       track('user_logged_in')
-      navigate('/chat', { replace: true })
+      navigate('/onboarding', { replace: true })
     } catch (err) {
       setStatus('error')
       setErrorMessage(

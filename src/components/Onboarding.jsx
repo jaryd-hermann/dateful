@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { track } from '../lib/posthog'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-
 const PREFERRED_WEEKDAYS_Q = { id: 'preferred_weeknights', type: 'chips', multi: true, question: 'Which weeknights are usually best?', options: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'], values: ['monday', 'tuesday', 'wednesday', 'thursday'] }
 
 const QUESTIONS = [
@@ -90,6 +88,12 @@ function renderHistoryAnswer(q, answer) {
   return '—'
 }
 
+function formatPhoneForDisplay(e164) {
+  if (!e164) return ''
+  const digits = String(e164).replace(/\D/g, '').slice(-10)
+  return digits.length === 10 ? `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` : e164
+}
+
 function getEffectiveQuestions(answers) {
   const result = []
   for (const q of QUESTIONS) {
@@ -117,6 +121,10 @@ export default function Onboarding() {
   const [namesEditPrimary, setNamesEditPrimary] = useState('')
   const [namesEditPartner, setNamesEditPartner] = useState('')
   const [selectedWeeknights, setSelectedWeeknights] = useState([])
+  const [settingUp, setSettingUp] = useState(false)
+  const [userPhone, setUserPhone] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+  const [sessionChecked, setSessionChecked] = useState(false)
   const selectedChipsRef = useRef([])
   const selectedWeeknightsRef = useRef([])
   const pendingAnswersRef = useRef({})
@@ -128,6 +136,23 @@ export default function Onboarding() {
   const currentQuestion = effectiveQuestions[clampedIndex]
   const isLastQuestion = clampedIndex === effectiveQuestions.length - 1
   const progress = effectiveQuestions.length > 0 ? ((clampedIndex + 1) / effectiveQuestions.length) * 100 : 0
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!mounted) return
+      if (!user) {
+        navigate('/login', { replace: true })
+        return
+      }
+      setUserEmail(user.email || '')
+      setSessionChecked(true)
+      const { data: profile } = await supabase.from('users').select('phone').eq('auth_user_id', user.id).maybeSingle()
+      if (mounted && profile?.phone) setUserPhone(formatPhoneForDisplay(profile.phone))
+    })()
+    return () => { mounted = false }
+  }, [navigate])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -229,32 +254,32 @@ export default function Onboarding() {
 
     if (isLastQuestion) {
       setStatus('loading')
+      setSettingUp(true)
+      setErrorMessage('')
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
+          setSettingUp(false)
           navigate('/signup', { replace: true })
           return
         }
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/onboarding-complete`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-          body: JSON.stringify({ answers: newAnswers }),
+
+        const { data, error } = await supabase.functions.invoke('onboarding-complete', {
+          body: { answers: newAnswers },
         })
-        let data
-        try {
-          data = await res.json()
-        } catch {
-          throw new Error(res.status === 401 ? 'Session expired — please log in again' : `Request failed (${res.status})`)
-        }
-        if (!res.ok) throw new Error(data?.error || data?.message || data?.details || `Failed to save (${res.status})`)
+
+        if (error) throw new Error(error.message || 'Request failed')
+        if (data?.error) throw new Error(data.error)
         track('onboarding_completed')
         navigate('/chat', { replace: true })
       } catch (err) {
+        setSettingUp(false)
         setStatus('error')
-        setErrorMessage(err.message || 'Something went wrong')
+        setErrorMessage(
+          err.name === 'AbortError'
+            ? 'This is taking longer than expected. Please try again — your Supabase project may be waking up.'
+            : err.message || 'Something went wrong'
+        )
       }
     } else {
       const nextEffective = getEffectiveQuestions(newAnswers)
@@ -311,11 +336,37 @@ export default function Onboarding() {
     setErrorMessage('')
   }
 
-  if (!currentQuestion) {
+  if (!sessionChecked || !currentQuestion) {
     return (
       <div className="onboarding-page">
         <div className="onboarding-content">
-          <div className="text-[var(--color-text-secondary)]">Loading...</div>
+          <div className="text-[var(--color-text-secondary)]">
+            {!sessionChecked ? 'Verifying session...' : 'Loading...'}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (settingUp) {
+    return (
+      <div className="onboarding-page onboarding-setting-up">
+        <div className="onboarding-header-bar" style={{ position: 'absolute', top: 0, right: 0, left: 0, padding: 'var(--spacing-md) var(--spacing-lg)', background: 'transparent', zIndex: 11 }}>
+          {(userPhone || userEmail) && <span className="text-sm text-[var(--color-text-secondary)]">{userPhone || userEmail}</span>}
+          <button type="button" onClick={async () => { await supabase.auth.signOut(); navigate('/login', { replace: true }) }} className="onboarding-logout">Log out</button>
+        </div>
+        <div className="onboarding-content onboarding-setting-up-content">
+          <p className="text-[var(--color-text-primary)] text-[17px] leading-relaxed" style={{ fontFamily: 'var(--font-display)' }}>
+            Setting up your couple profile and planning 5 sample dates quickly. Dateful will text you to {userPhone || '(your number)'} in a few minutes.
+          </p>
+          <div className="onboarding-setting-up-dots">
+            <span />
+            <span />
+            <span />
+          </div>
+          {errorMessage && (
+            <p className="text-sm text-[var(--color-accent)] mt-4">{errorMessage}</p>
+          )}
         </div>
       </div>
     )
@@ -324,9 +375,26 @@ export default function Onboarding() {
   return (
     <div className="onboarding-page">
       <div className="onboarding-content">
+        {/* Top right: user identifier (phone or email) + logout */}
+        <div className="onboarding-header-bar">
+          {(userPhone || userEmail) && (
+            <span className="text-sm text-[var(--color-text-secondary)]">{userPhone || userEmail}</span>
+          )}
+          <button
+            type="button"
+            onClick={async () => {
+              await supabase.auth.signOut()
+              navigate('/login', { replace: true })
+            }}
+            className="onboarding-logout"
+          >
+            Log out
+          </button>
+        </div>
+
         {/* Header */}
         <h1 className="text-xl font-semibold text-[var(--color-text-primary)]" style={{ fontFamily: 'var(--font-display)', marginBottom: 'var(--spacing-lg)' }}>
-          Let's get to know you
+          Let&apos;s get to know you
         </h1>
 
         {/* Progress bar */}

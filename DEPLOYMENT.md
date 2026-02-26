@@ -105,8 +105,9 @@ The waitlist form and other features use Supabase Edge Functions and database ta
 3. **Deploy Edge Functions:**
    ```bash
    supabase functions deploy waitlist-join --no-verify-jwt
+   supabase functions deploy waitlist-update --no-verify-jwt
    ```
-   The `--no-verify-jwt` flag lets the waitlist form work without requiring the anon key in requests (avoids 401 errors). Deploy other functions as needed: `auth-send-otp`, `auth-verify-otp`, `onboarding-complete`, etc.
+   The `--no-verify-jwt` flag lets the waitlist flow work without requiring the anon key in requests (avoids 401 errors). Deploy other functions as needed: `auth-send-otp`, `auth-verify-otp`, `onboarding-complete`, etc.
 
 4. **Verify env vars** in your hosting platform (Vercel):
    - `VITE_SUPABASE_URL` – your Supabase project URL
@@ -169,8 +170,8 @@ If the waitlist shows "Something went wrong" or "Server setup incomplete", the m
 - Or ensure `VITE_SUPABASE_ANON_KEY` is set in Vercel (Settings → Environment Variables) and redeploy
 
 **Waitlist form shows "Something went wrong" or "Server setup incomplete":**
-- Run `supabase db push` to create the `waitlist` table
-- Deploy the function: `supabase functions deploy waitlist-join --no-verify-jwt`
+- Run `supabase db push` to create the `waitlist` table and run migrations
+- Deploy the functions: `supabase functions deploy waitlist-join --no-verify-jwt` and `supabase functions deploy waitlist-update --no-verify-jwt`
 - Confirm `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in Vercel
 - Check the browser Network tab: does the request reach Supabase? What status code?
 

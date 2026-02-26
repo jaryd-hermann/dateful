@@ -21,7 +21,7 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseAnonKey = Deno.env.get('ANON_KEY') ?? ''
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
@@ -146,23 +146,40 @@ serve(async (req) => {
     const city = answers.city || 'your city'
     const appUrl = Deno.env.get('APP_URL') || 'https://dateful.chat'
 
+    const primaryPhone = primaryUser.phone
+    const primaryWelcomeMessage = `Hey ${primaryName}, I'm Lucy, your Dateful planning assistant. I'll send you some ideas in a few minutes to start getting a sense of your and ${partnerName}'s ideal date night.`
     const inviteMessage = `Hey ${partnerName}! ${primaryName} signed you both up for Dateful — I'm your date night planning assistant. I'll help find amazing things to do together in ${city}. To start, I'd love to learn what you're into. Check out your date ideas here → ${appUrl}/cards`
 
-    if (twilioAccountSid && twilioAuthToken && twilioPhone && partnerPhone) {
-      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`
-      const body = new URLSearchParams({
-        To: partnerPhone,
-        From: twilioPhone,
-        Body: inviteMessage,
-      })
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`
+    const twilioAuth = twilioAccountSid && twilioAuthToken && twilioPhone
 
+    if (twilioAuth && primaryPhone) {
       await fetch(twilioUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           Authorization: 'Basic ' + btoa(`${twilioAccountSid}:${twilioAuthToken}`),
         },
-        body: body.toString(),
+        body: new URLSearchParams({
+          To: primaryPhone,
+          From: twilioPhone,
+          Body: primaryWelcomeMessage,
+        }).toString(),
+      })
+    }
+
+    if (twilioAuth && partnerPhone) {
+      await fetch(twilioUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: 'Basic ' + btoa(`${twilioAccountSid}:${twilioAuthToken}`),
+        },
+        body: new URLSearchParams({
+          To: partnerPhone,
+          From: twilioPhone,
+          Body: inviteMessage,
+        }).toString(),
       })
     }
 

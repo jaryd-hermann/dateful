@@ -6,36 +6,36 @@ import Verify from './components/Verify'
 import Onboarding from './components/Onboarding'
 import Chat from './components/Chat'
 import Layout from './components/Layout'
-import { supabase } from './lib/supabase'
-import { useState, useEffect } from 'react'
+import { useAuthWithProfile } from './lib/useAuthWithProfile'
 
-function ProtectedRoute({ children }) {
-  const [loading, setLoading] = useState(true)
-  const [session, setSession] = useState(null)
+const LoadingScreen = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
+    <div className="animate-pulse text-[var(--color-text-secondary)]">Loading...</div>
+  </div>
+)
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setLoading(false)
-    })
-    const { data: { subscriber } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
-    return () => subscriber?.unsubscribe()
-  }, [])
+/** Logged-out only: redirects to /onboarding or /chat if already logged in. Shows page immediately to avoid loading screen. */
+function GuestOnlyRoute({ children }) {
+  const { session, coupleId, loading } = useAuthWithProfile()
+  if (!loading && session) return <Navigate to={coupleId ? '/chat' : '/onboarding'} replace />
+  return children
+}
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
-        <div className="animate-pulse text-[var(--color-text-secondary)]">Loading...</div>
-      </div>
-    )
-  }
+/** Requires auth. If onboarding complete, redirect to /chat */
+function OnboardingRoute({ children }) {
+  const { session, coupleId, loading } = useAuthWithProfile()
+  if (loading) return <LoadingScreen />
+  if (!session) return <Navigate to="/login" replace />
+  if (coupleId) return <Navigate to="/chat" replace />
+  return children
+}
 
-  if (!session) {
-    return <Navigate to="/login" replace />
-  }
-
+/** Requires auth. If onboarding incomplete, redirect to /onboarding */
+function ChatRoute({ children }) {
+  const { session, coupleId, loading } = useAuthWithProfile()
+  if (loading) return <LoadingScreen />
+  if (!session) return <Navigate to="/login" replace />
+  if (!coupleId) return <Navigate to="/onboarding" replace />
   return children
 }
 
@@ -43,28 +43,28 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/verify" element={<Verify />} />
+        <Route path="/" element={<GuestOnlyRoute><Landing /></GuestOnlyRoute>} />
+        <Route path="/signup" element={<GuestOnlyRoute><Signup /></GuestOnlyRoute>} />
+        <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />
+        <Route path="/verify" element={<GuestOnlyRoute><Verify /></GuestOnlyRoute>} />
         <Route
           path="/onboarding/*"
           element={
-            <ProtectedRoute>
+            <OnboardingRoute>
               <Layout>
                 <Onboarding />
               </Layout>
-            </ProtectedRoute>
+            </OnboardingRoute>
           }
         />
         <Route
           path="/chat"
           element={
-            <ProtectedRoute>
+            <ChatRoute>
               <Layout>
                 <Chat />
               </Layout>
-            </ProtectedRoute>
+            </ChatRoute>
           }
         />
         <Route path="/dates" element={<div className="p-6">Dates (coming soon)</div>} />

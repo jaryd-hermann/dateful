@@ -322,6 +322,77 @@ textarea.onboarding-input::-moz-placeholder {
   30% { transform: translateY(-4px); }
 }
 
+/* Onboarding "Setting up" loading screen */
+.onboarding-setting-up {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--color-bg);
+}
+
+.onboarding-setting-up-dots {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.onboarding-setting-up-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: chat-typing-bounce 1.4s ease-in-out infinite;
+}
+
+.onboarding-setting-up-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.onboarding-setting-up-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.onboarding-setting-up-content {
+  max-width: 20rem;
+  text-align: center;
+}
+
+.onboarding-header-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  padding: var(--spacing-md) 0;
+  margin-bottom: var(--spacing-md);
+}
+
+.onboarding-header-bar .onboarding-logout {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0.25rem 0;
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 2.25rem;
+  min-width: 3rem;
+}
+
+.onboarding-header-bar .onboarding-logout:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
 /* Signup and Verify - shared centered form layout */
 .signup-page,
 .verify-page {
@@ -516,6 +587,175 @@ textarea.onboarding-input::-moz-placeholder {
 .waitlist-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Waitlist modal */
+.waitlist-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: var(--spacing-lg);
+}
+
+.waitlist-modal {
+  position: relative;
+  background: var(--color-bg);
+  border: 1px solid rgba(168, 165, 160, 0.2);
+  border-radius: 1rem;
+  padding: var(--spacing-xl);
+  max-width: 28rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.waitlist-modal-close {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 0.5rem;
+}
+
+.waitlist-modal-close:hover {
+  color: var(--color-text-primary);
+  background: rgba(168, 165, 160, 0.1);
+}
+
+.waitlist-modal-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.waitlist-modal-questions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.waitlist-modal-question {
+  text-align: left;
+}
+
+.waitlist-modal-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Thank you modal - LinkedIn mock */
+.waitlist-modal-thankyou .waitlist-modal-title {
+  margin-bottom: var(--spacing-lg);
+}
+
+.waitlist-linkedin-mock {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(168, 165, 160, 0.15);
+  border-radius: 0.75rem;
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  text-align: left;
+}
+
+.waitlist-linkedin-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.waitlist-linkedin-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(168, 165, 160, 0.2);
+}
+
+.waitlist-linkedin-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+}
+
+.waitlist-linkedin-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.waitlist-linkedin-post {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.waitlist-linkedin-footer {
+  display: flex;
+  gap: var(--spacing-lg);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.waitlist-linkedin-like {
+  color: var(--color-accent);
+}
+
+.waitlist-share-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.waitlist-share-btn {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.waitlist-share-btn.linkedin {
+  background: #0a66c2;
+  color: white;
+}
+
+.waitlist-share-btn.linkedin:hover {
+  background: #004182;
+  transform: translateY(-1px);
+}
+
+.waitlist-share-btn.copy {
+  background: rgba(168, 165, 160, 0.15);
+  color: var(--color-text-primary);
+  border: 1px solid rgba(168, 165, 160, 0.25);
+}
+
+.waitlist-share-btn.copy:hover {
+  background: rgba(168, 165, 160, 0.25);
+  transform: translateY(-1px);
 }
 
 .signup-page .signup-cta:disabled {
