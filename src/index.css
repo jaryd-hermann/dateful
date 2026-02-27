@@ -467,6 +467,97 @@ textarea.onboarding-input::-moz-placeholder {
   margin-bottom: 0.5rem;
 }
 
+/* Terms & Privacy page */
+.terms-page {
+  min-height: 100vh;
+  width: 100%;
+  padding: 3rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.terms-content {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.terms-back {
+  display: inline-block;
+  margin-bottom: 2rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.terms-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(168, 165, 160, 0.2);
+}
+
+.terms-tab {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.terms-tab:hover {
+  color: var(--color-text-primary);
+}
+
+.terms-tab-active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.terms-body {
+  color: var(--color-text-primary);
+}
+
+.terms-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.terms-updated {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 2rem;
+}
+
+.terms-body section {
+  margin-bottom: 1.5rem;
+}
+
+.terms-body h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-primary);
+}
+
+.terms-body p {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.terms-body a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.terms-body a:hover {
+  color: var(--color-accent-hover);
+}
+
 .verify-page .verify-code-input {
   width: 100%;
   padding: 1rem;

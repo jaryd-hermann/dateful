@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { track } from '../lib/posthog'
 import { supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 
@@ -194,7 +195,7 @@ export default function Landing() {
         </div>
 
         {/* Footer */}
-        <footer className="pt-12 text-center animate-fade-in-delay-5">
+        <footer className="pt-12 text-center animate-fade-in-delay-5 space-y-2">
           <a
             href="https://www.the-diff.com"
             target="_blank"
@@ -203,6 +204,11 @@ export default function Landing() {
           >
             follow along as I build this
           </a>
+          <div className="text-xs text-[var(--color-text-secondary)]">
+            <Link to="/terms" className="hover:text-[var(--color-accent)] transition-colors">
+              Terms
+            </Link>
+          </div>
         </footer>
       </main>
 

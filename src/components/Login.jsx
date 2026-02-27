@@ -24,27 +24,29 @@ export default function Login() {
     setErrorMessage('')
 
     try {
-      const signInPromise = supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password,
       })
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Connection timed out. If your Supabase project was paused (free tier), try again — it may need a minute to wake up. Otherwise check your network.')), 45000)
-      )
-      const { data, error } = await Promise.race([signInPromise, timeoutPromise])
 
-      if (error) {
-        throw new Error(error.message)
-      }
+      if (error) throw error
 
       track('user_logged_in')
-      navigate('/onboarding', { replace: true })
+
+      const { data: profile } = await supabase
+        .from('users')
+        .select('couple_id')
+        .eq('auth_user_id', data.user.id)
+        .maybeSingle()
+
+      navigate(profile?.couple_id ? '/chat' : '/onboarding', { replace: true })
     } catch (err) {
       setStatus('error')
+      const msg = err?.message || ''
       setErrorMessage(
-        err.message?.includes('Invalid login')
+        msg.includes('Invalid login') || msg.includes('invalid') || msg.includes('credentials')
           ? 'Invalid email or password'
-          : err.message || 'Something went wrong'
+          : msg || 'Something went wrong'
       )
     }
   }

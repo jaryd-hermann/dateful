@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Landing from './components/Landing'
+import Terms, { TermsContent, PrivacyContent } from './components/Terms'
 import Signup from './components/Signup'
 import Login from './components/Login'
 import Verify from './components/Verify'
@@ -14,7 +15,7 @@ const LoadingScreen = () => (
   </div>
 )
 
-/** Logged-out only: redirects to /onboarding or /chat if already logged in. Shows page immediately to avoid loading screen. */
+/** Logged-out only: redirect to app if already logged in. Show children while loading so guests see content immediately. */
 function GuestOnlyRoute({ children }) {
   const { session, coupleId, loading } = useAuthWithProfile()
   if (!loading && session) return <Navigate to={coupleId ? '/chat' : '/onboarding'} replace />
@@ -47,6 +48,10 @@ function App() {
         <Route path="/signup" element={<GuestOnlyRoute><Signup /></GuestOnlyRoute>} />
         <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />
         <Route path="/verify" element={<GuestOnlyRoute><Verify /></GuestOnlyRoute>} />
+        <Route path="/terms" element={<Terms />}>
+          <Route index element={<TermsContent />} />
+          <Route path="privacy" element={<PrivacyContent />} />
+        </Route>
         <Route
           path="/onboarding/*"
           element={

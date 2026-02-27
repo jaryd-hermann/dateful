@@ -14,9 +14,6 @@ export function useAuthWithProfile() {
 
   useEffect(() => {
     let mounted = true
-    const timeout = setTimeout(() => {
-      if (mounted) setLoading(false)
-    }, 5000)
 
     async function init() {
       try {
@@ -39,7 +36,10 @@ export function useAuthWithProfile() {
           setCoupleId(profile?.couple_id ?? null)
         }
       } catch (e) {
-        if (mounted) setCoupleId(null)
+        if (mounted) {
+          setSession(null)
+          setCoupleId(null)
+        }
       } finally {
         if (mounted) setLoading(false)
       }
@@ -71,7 +71,6 @@ export function useAuthWithProfile() {
 
     return () => {
       mounted = false
-      clearTimeout(timeout)
       subscriber?.unsubscribe()
     }
   }, [])
